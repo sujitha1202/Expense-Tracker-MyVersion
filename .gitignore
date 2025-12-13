@@ -1,0 +1,15 @@
+# Dependencies (Never upload these)
+frontend/node_modules/
+backend/venv/
+backend/__pycache__/
+
+# Database (Everyone should have their own local DB)
+backend/*.db
+backend/*.sqlite3
+
+# Environment Secrets
+.env
+backend/.env
+
+# OS Junk
+.DS_Store
