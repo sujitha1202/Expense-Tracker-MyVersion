@@ -41,3 +41,13 @@ class PredictResponse(BaseModel):
 class CompareResponse(BaseModel):
     message: str
 
+# =========================
+# Chatbot Schemas
+# =========================
+
+class ChatRequest(BaseModel):
+    user_message: str
+
+
+class ChatResponse(BaseModel):
+    bot_response: str

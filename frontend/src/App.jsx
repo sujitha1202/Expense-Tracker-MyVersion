@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import './App.css'
 import { BASE_URL } from './config'
+import Chatbot from './components/Chatbot'
+
 
 const emptyForm = {
   title: '',
@@ -220,6 +222,18 @@ function App() {
             </div>
           )}
         </section>
+        <section className="card">
+          <div className="card-header">
+           <h2>Chatbot</h2>
+           <p className="helper">
+              Ask questions like <em>"How much did I spend on Food?"</em>
+           </p>
+           </div>
+
+           <Chatbot />
+         </section>
+
+
       </main>
     </div>
   )

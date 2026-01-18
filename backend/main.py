@@ -1,7 +1,10 @@
 from fastapi import FastAPI, Depends, HTTPException, APIRouter
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
-from typing import List
+from typing import List   
+from sqlalchemy import func
+from schemas import ChatRequest, ChatResponse
+
 
 from database import SessionLocal, engine
 from models import Expense
@@ -20,6 +23,8 @@ from models import Base
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI()
+
+
 
 # Configure CORS to allow requests from React frontend
 app.add_middleware(
@@ -41,6 +46,51 @@ def get_db():
         yield db
     finally:
         db.close()
+
+def process_chat(message: str, db: Session) -> str:
+    message = message.lower()
+
+    # 1️⃣ Greeting
+    if "hello" in message or "hi" in message:
+        return "Hi 👋 I can help you track your expenses."
+
+    # 2️⃣ Total spent query
+    if "how much" in message or "spent" in message or "total" in message:
+        categories = ["food", "coffee", "taxi", "transport", "shopping"]
+
+        for category in categories:
+            if category in message:
+                total = (
+                    db.query(func.sum(Expense.amount))
+                    .filter(Expense.category.ilike(category))
+                    .scalar()
+                )
+                total = total or 0
+                return f"You have spent a total of ₹{total} on {category.capitalize()}."
+
+    # 3️⃣ Add expense command
+    if "add" in message:
+        # Example: add 200 for taxi
+        words = message.split()
+        try:
+            amount = float(words[1])
+            category = words[-1].capitalize()
+
+            expense = Expense(
+                title=category,
+                amount=amount,
+                category=category,
+                date="2026-01-02"
+            )
+
+            db.add(expense)
+            db.commit()
+
+            return f"✅ Added ₹{amount} to {category}."
+        except:
+            return "❌ Use format: Add <amount> for <category>"
+
+    return "🤖 I didn’t understand. Try: 'How much did I spend on Food?'"
 
 
 # Expenses endpoints (no /api prefix - will be mounted at /api)
@@ -94,6 +144,13 @@ def compare_spending():
         message="Spending analysis placeholder."
     )
 
+@api_router.post("/chat", response_model=ChatResponse)
+def chat_endpoint(
+    request: ChatRequest,
+    db: Session = Depends(get_db)
+):
+    reply = process_chat(request.user_message, db)
+    return {"bot_response": reply}
 
 # Mount the API router at root (proxy will strip /api before forwarding)
 app.include_router(api_router)
